@@ -64,6 +64,76 @@ app.get('/:network', cors(), (req, res) => {
 });
 
 
+// collect more history data
+app.get('/:network/blocks', cors(), async (req, res) => {
+    res.status(404);
+    res.send({
+        status: 404,
+        error: 'Not found',
+        message: 'This endpoint was disabled.'
+    });
+    return;
+
+    const network = req.params.network;
+    const fromblock = parseInt(req.query.fromblock);
+    const limit = parseInt(req.query.limit);
+
+    const data = [];
+    let b = fromblock;
+
+    const fileExists = async path => !!(await fs.promises.stat(path).catch(e => false));
+
+    const formatToRegularCall = filepath => {
+        try {
+            // fetch blocks from file
+            let stats = JSON.parse(fs.readFileSync(filepath));
+            
+            // set chosen number of blocks
+            let blocks = 200;
+            if (req.query.blocks && !isNaN(req.query.blocks)){
+                blocks = parseInt(req.query.blocks);
+            }
+    
+            // slice to last N blocks the stats arrays
+            Object.keys(stats).filter(e => Array.isArray(stats[e])).forEach(e => stats[e] = stats[e].slice(-blocks));
+    
+            // select nth transaction from each block
+            let nth = 0.3;
+            if (req.query.nth && !isNaN(req.query.nth)){
+                nth = Math.max(0.01, parseFloat(req.query.nth));
+            }
+            stats.minGwei = stats.minGwei.map(b => {
+                let i = b.length - 1;
+                if (nth > 0 && nth < 1){
+                    i = Math.max(0, parseInt(b.length * nth - 1));
+                }
+                else if (nth < b.length){
+                    i = nth - 1;
+                }
+                return b[i];
+            });
+    
+            return stats;
+        }
+        catch (error) {
+            return {
+                status: 404,
+                error: 'Not found',
+                message: 'The network you requested is not available.',
+                serverMessage: error,
+            };
+        }
+    }
+
+    while (fromblock - b < limit){
+        const filepath = `${__dirname}/history/${network}/${b}.json`;
+        if (await fileExists(filepath)){
+            data.push(formatToRegularCall(filepath));
+        }
+        b--;
+    }
+    res.send(data);
+});
 
 // get tx info from address
 app.get('/tx/:address', cors(), async (req, res) => {

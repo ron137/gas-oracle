@@ -2,3 +2,4 @@ node_modules
 blockStats*
 .vscode
 db_file
+history
