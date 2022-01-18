@@ -3,37 +3,37 @@
         {
             "name"        : "oracle_eth",
             "script"      : "./oracle.js",
-            "args"        : "-n ethereum -t 7000"
+            "args"        : "-n ethereum"
         },
         {
             "name"        : "oracle_bsc",
             "script"      : "./oracle.js",
-            "args"        : "-n bsc -t 2000"
+            "args"        : "-n bsc"
         },
         {
             "name"        : "oracle_polygon",
             "script"      : "./oracle.js",
-            "args"        : "-n polygon -t 1000"
+            "args"        : "-n polygon"
         },
         {
             "name"        : "oracle_fantom",
             "script"      : "./oracle.js",
-            "args"        : "-n fantom -t 300"
+            "args"        : "-n fantom"
         },
         {
             "name"        : "oracle_avax",
             "script"      : "./oracle.js",
-            "args"        : "-n avax -t 1000"
+            "args"        : "-n avax"
         },
         {
             "name"        : "oracle_moonriver",
             "script"      : "./oracle.js",
-            "args"        : "-n moonriver -t 5000"
+            "args"        : "-n moonriver"
         },
         {
             "name"        : "oracle_cronos",
             "script"      : "./oracle.js",
-            "args"        : "-n cronos -t 2500"
+            "args"        : "-n cronos"
         },
         {
             "name"        : "oracle_server",
