@@ -5,7 +5,6 @@ const db = require('./database');
 const args = {
     network: 'ethereum',
     sampleSize: 1000,
-    timeInterval: 1000,
 };
 
 // receive args
@@ -28,6 +27,7 @@ const rpc = {
     blocks: {},
     sampleSize: args.sampleSize, // number of samples analized
     // speedSize: [35, 60, 90, 100], // percent of blocks accepted for each speed
+    timeInterval: args.timeInterval || 1000,
 
     connect: async function(){
         const url = JSON.parse(fs.readFileSync(`rpcs.json`));
@@ -92,12 +92,15 @@ const rpc = {
             // get a block
             const block = await this.getBlock(this.last);
             const sortedBlocks = Object.keys(this.blocks).sort();
+
+            let fetchSuccess = false;
             if (block && block.transactions){
                 // save the block
                 this.recordBlock(block);
                 // call to update monited wallets. required only if want to monitor txs to target addresses
                 // db.updateWallets(block, args.network);
                 this.last = block.number + 1;
+                fetchSuccess = true;
             }
             else if (sortedBlocks.length < this.sampleSize){
                 // there is not a next block yet, fetch a previous block
@@ -105,7 +108,7 @@ const rpc = {
                 this.recordBlock(block);
             }
 
-            setTimeout(() => this.loop(), sortedBlocks.length < this.sampleSize ? 10 : args.timeInterval);
+            setTimeout(() => this.loop(), sortedBlocks.length < this.sampleSize ? 10 : ( args.timeInterval ? args.timeInterval : this.dynamicInterval(fetchSuccess) ));
         }
         catch (error){
             console.log(error);
@@ -201,6 +204,21 @@ const rpc = {
         fs.writeFileSync(`${__dirname}/predicted_gwei.json`, JSON.stringify(result));
         return result;
     },
+
+    dynamicInterval: function(success) {
+        const speedFactor = 1.1;
+        if (success){
+            // increase speed
+            this.timeInterval /= speedFactor;
+        }
+        else {
+            // reduce speed
+            this.timeInterval *= speedFactor;
+        }
+    
+        return this.timeInterval;
+    },
+    
 
     // testing methods
 
