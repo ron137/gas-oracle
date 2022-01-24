@@ -36,6 +36,21 @@
             "args"        : "-n cronos"
         },
         {
+            "name"        : "oracle_harmony",
+            "script"      : "./oracle.js",
+            "args"        : "-n harmony"
+        },
+        {
+            "name"        : "oracle_heco",
+            "script"      : "./oracle.js",
+            "args"        : "-n heco"
+        },
+        {
+            "name"        : "oracle_celo",
+            "script"      : "./oracle.js",
+            "args"        : "-n celo"
+        },
+        {
             "name"        : "oracle_server",
             "script"      : "./server.js",
             "args"        : "-p 8080"

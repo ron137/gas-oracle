@@ -216,6 +216,7 @@ const rpc = {
             this.timeInterval *= speedFactor;
         }
     
+        // console.log(this.timeInterval)
         return this.timeInterval;
     },
     

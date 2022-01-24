@@ -5,5 +5,8 @@
     "avax": "https://api.avax.network/ext/bc/C/rpc",
     "fantom": "https://rpc.ftm.tools",
     "moonriver": "https://rpc.moonriver.moonbeam.network",
-    "cronos": "https://evm-cronos.crypto.org"
+    "cronos": "https://evm-cronos.crypto.org",
+    "harmony": "https://api.harmony.one/",
+    "heco": "https://http-mainnet.hecochain.com",
+    "celo": "https://forno.celo.org"
 }
