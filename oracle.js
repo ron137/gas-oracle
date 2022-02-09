@@ -63,15 +63,6 @@ const rpc = {
             this.last = await this.web3.eth.getBlockNumber();
             this.connected = true;
             process.stdout.write(`Connected to ${args.network} RPC. Fetching ${this.sampleSize} blocks before serving data.\n`);
-
-            // check if this network have eip1559 gas prices
-            try {
-                await this.web3.eth.getFeeHistory(1, 'latest', [0]);
-            }
-            catch(error){
-                this.legacyGas = true;
-                console.log('Using legacy gas for this network');
-            }
         }
         catch(error){
             console.log(error);
@@ -86,29 +77,8 @@ const rpc = {
             throw new Error('Not connected');
         }
 
-        const last = await this.web3.eth.getBlockNumber();
-
-        if (last <= num) {
-            return null;
-        }
-
         try {
-            // get block
-            let promises = [this.web3.eth.getBlock(num || 'latest', true)];
-
-            // get fee history
-            if (!this.legacyGas){
-                promises.push(this.web3.eth.getFeeHistory(1, num || 'latest', [0]));
-            }
-
-            promises = await Promise.allSettled(promises);
-
-            let block = promises[0].status == 'fulfilled' ? promises[0].value : null;
-            // if available, get base fee
-            if (!this.legacyGas && promises[1] && promises[1].status == 'fulfilled' && promises[1].value.baseFeePerGas) {
-                block.baseFee = parseInt(promises[1].value.baseFeePerGas[0]) / 1000000000;
-            }
-
+            const block = await this.web3.eth.getBlock(num || 'latest', true);
             return block;
         }
         catch(error){
@@ -135,9 +105,7 @@ const rpc = {
             else if (sortedBlocks.length < this.sampleSize){
                 // there is not a next block yet, fetch a previous block
                 const block = await this.getBlock(sortedBlocks[0] - 1);
-                if (block && block.transactions){
-                    this.recordBlock(block);
-                }
+                this.recordBlock(block);
             }
 
             setTimeout(() => this.loop(), sortedBlocks.length < this.sampleSize ? 10 : ( args.timeInterval ? args.timeInterval : this.dynamicInterval(fetchSuccess) ));
@@ -156,10 +124,6 @@ const rpc = {
             minGwei: [],
             avgGas: [],
         };
-
-        if (block.baseFee){
-            this.blocks[block.number].baseFee = block.baseFee;
-        }
 
         if (transactions.length){
             // set average gas per tx in the block
