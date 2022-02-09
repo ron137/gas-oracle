@@ -14,7 +14,7 @@ const args = {
 // node history.js -n polygon -b 19833528 -s 4 -t 200
 // node history.js -n fantom -b 18286418 -s 4 -t 400
 // node history.js -n avax -b 33409 -s 4 -t 230
-// node history.js -n ethereum -b 13352726 -s 4 -t 40
+// node history.js -n ethereum -s 4 -t 35 -b 10993996
 
 // receive args
 process.argv.forEach((val, index, array) => {
