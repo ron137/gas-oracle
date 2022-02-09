@@ -66,13 +66,13 @@ app.get('/:network', cors(), (req, res) => {
 
 // collect more history data
 app.get('/:network/blocks', cors(), async (req, res) => {
-    res.status(404);
-    res.send({
-        status: 404,
-        error: 'Not found',
-        message: 'This endpoint was disabled.'
-    });
-    return;
+    // res.status(404);
+    // res.send({
+    //     status: 404,
+    //     error: 'Not found',
+    //     message: 'This endpoint was disabled.'
+    // });
+    // return;
 
     const network = req.params.network;
     const fromblock = parseInt(req.query.fromblock);
