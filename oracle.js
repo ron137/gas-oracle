@@ -63,6 +63,11 @@ const rpc = {
             this.last = await this.web3.eth.getBlockNumber();
             this.connected = true;
             process.stdout.write(`Connected to ${args.network} RPC. Fetching ${this.sampleSize} blocks before serving data.\n`);
+
+            if (!(await this.getBaseFee('latest'))){
+                this.legacyGas = true;
+                console.log('Using legacy gas');
+            }
         }
         catch(error){
             console.log(error);
@@ -87,10 +92,36 @@ const rpc = {
         }
     },
 
+    getBaseFee: async function(num) {
+        try {
+            const history = await this.web3.eth.getFeeHistory(1, num || 'latest', [0]);
+            if (history.baseFeePerGas) {
+                return parseInt(history.baseFeePerGas[0]) / 1000000000;
+            }
+        }
+        catch (error) {
+            // console.log('Error retieving base gas fee');
+            return null;
+        }
+        return 0;
+    },
+
     loop: async function(){
         try {
-            // get a block
-            const block = await this.getBlock(this.last);
+            // this.time = new Date().getTime();
+            let promises = [ this.getBlock(this.last) ];
+
+            if (!this.legacyGas) {
+                promises.push(this.getBaseFee(this.last));
+            }
+
+            promises = await Promise.allSettled(promises);
+
+            const block = promises[0].status == 'fulfilled' ? promises[0].value : null;
+            if (!this.legacyGas && block) {
+                block.baseFee = promises[1].status == 'fulfilled' ? promises[1].value : null;
+            }
+
             const sortedBlocks = Object.keys(this.blocks).sort();
 
             let fetchSuccess = false;
@@ -125,6 +156,10 @@ const rpc = {
             avgGas: [],
         };
 
+        if (block.baseFee){
+            this.blocks[block.number].baseFee = block.baseFee;
+        }
+
         if (transactions.length){
             // set average gas per tx in the block
             const avgGas = parseInt(block.gasUsed) / transactions.length;
@@ -139,7 +174,8 @@ const rpc = {
             delete this.blocks[sortedBlocks[0]];
 
             this.calcBlockStats();
-            console.log(`${new Date().toISOString()}: New block ${this.last} read`);
+            console.log(`${new Date().toISOString()}: New block ${this.last} read. Next update: ${this.timeInterval}`);
+            // console.log(`Time: elapsed: ${new Date().getTime() - this.time}`);
         }
         else{
             // pretty progress bar
@@ -148,10 +184,12 @@ const rpc = {
             const barString = [...Array(filledBars).fill('#'), ...Array(barSize - filledBars).fill('=')].join('');
             if (sortedBlocks.length == this.sampleSize){
                 const barString = Array(barSize).fill('#').join('');
-                process.stdout.write(`\r[${barString}] ${this.sampleSize} / ${this.sampleSize}\n`);
+                console.log(`[${barString}] ${sortedBlocks.length} / ${this.sampleSize}`);
+                // process.stdout.write(`\r[${barString}] ${this.sampleSize} / ${this.sampleSize}\n`);
             }
             else{
-                process.stdout.write(`\r[${barString}] ${sortedBlocks.length} / ${this.sampleSize}`);
+                console.log(`[${barString}] ${sortedBlocks.length} / ${this.sampleSize}`);
+                // process.stdout.write(`\r[${barString}] ${sortedBlocks.length} / ${this.sampleSize}`);
             }
         }
     },
