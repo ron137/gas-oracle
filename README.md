@@ -73,6 +73,7 @@ On a successful request, a json will be returned with the following fields:
 * ```timestamp```: **number array**. UNIX timestamp of the mined time from each block;
 * ```minGwei```: **number array**. The minimum gas accepted (influenced by ```nth``` argument) by each block;
 * ```avgGas```: **number array**. Average gas used on transactions for each block;
+* ```baseFee```: **number array**. Base gas fee from each block. Only present for [EIP-1559](https://notes.ethereum.org/@vbuterin/eip-1559-faq) compliant networks;
 * ```lastBlock```: **number**. Last block number retrieved by the oracle.
 
 ### Sample response

@@ -156,7 +156,7 @@ const rpc = {
             avgGas: [],
         };
 
-        if (block.baseFee){
+        if (!this.legacyGas){
             this.blocks[block.number].baseFee = block.baseFee;
         }
 
