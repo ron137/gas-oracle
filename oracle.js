@@ -39,8 +39,9 @@ const rpc = {
         console.log('Starting gas oracle...');
 
         try {
-            this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network || 'ethereum']));
-            this.web3.setProvider(url[args.network || 'ethereum']);
+            // this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network || 'ethereum']));
+            this.web3 = new Web3(url[args.network || 'ethereum']);
+            // this.web3.setProvider(url[args.network || 'ethereum']);
             // this.web3.eth.extend({
             //     property: 'txpool',
             //     methods: [{
