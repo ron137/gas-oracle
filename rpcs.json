@@ -4,7 +4,7 @@
     "bsc": "https://bsc-dataseed.binance.org",
     "avax": "https://api.avax.network/ext/bc/C/rpc",
     "fantom": "https://rpc.ftm.tools",
-    "moonriver": "https://rpc.moonriver.moonbeam.network",
+    "moonriver": "https://rpc.api.moonriver.moonbeam.network",
     "cronos": "https://evm-cronos.crypto.org",
     "harmony": "https://api.harmony.one/",
     "heco": "https://http-mainnet.hecochain.com",
