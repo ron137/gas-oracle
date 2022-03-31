@@ -51,6 +51,11 @@
             "args"        : "-n celo"
         },
         {
+            "name"        : "oracle_fuse",
+            "script"      : "./oracle.js",
+            "args"        : "-n fuse"
+        },
+        {
             "name"        : "oracle_server",
             "script"      : "./server.js",
             "args"        : "-p 8080"
