@@ -1,6 +1,5 @@
 const Web3 = require('web3');
 const fs = require('fs');
-const db = require('./database');
 
 const args = {
     network: 'ethereum',
@@ -28,6 +27,8 @@ const rpc = {
     sampleSize: args.sampleSize, // number of samples analized
     // speedSize: [35, 60, 90, 100], // percent of blocks accepted for each speed
     timeInterval: args.timeInterval || 1000,
+    minInterval: 100,
+    maxInterval: 15000,
 
     connect: async function(){
         const url = JSON.parse(fs.readFileSync(`rpcs.json`));
@@ -39,8 +40,9 @@ const rpc = {
         console.log('Starting gas oracle...');
 
         try {
-            this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network || 'ethereum']));
-            this.web3.setProvider(url[args.network || 'ethereum']);
+            // this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network || 'ethereum']));
+            this.web3 = new Web3(url[args.network || 'ethereum']);
+            // this.web3.setProvider(url[args.network || 'ethereum']);
             // this.web3.eth.extend({
             //     property: 'txpool',
             //     methods: [{
@@ -60,7 +62,7 @@ const rpc = {
             //     return false;
             // }
 
-            this.last = await this.web3.eth.getBlockNumber();
+            await this.updateLastBlock();
             this.connected = true;
             process.stdout.write(`Connected to ${args.network} RPC. Fetching ${this.sampleSize} blocks before serving data.\n`);
 
@@ -75,6 +77,25 @@ const rpc = {
         }
 
         return true;
+    },
+
+    updateLastBlock: async function() {
+        try {
+            this.last = await this.web3.eth.getBlockNumber();
+        }
+        // in case there is an error using getBlockNumber function
+        catch (error) {
+            try {
+                const block = await this.web3.eth.getBlock('latest');
+                this.last = block.number;
+            }
+            catch (error) {
+                console.log(error)
+            }
+        }
+        finally {
+            setTimeout(async () => await this.updateLastBlock(), 1000 * 3600); // update every hour
+        }
     },
 
     getBlock: async function(num) {
@@ -122,24 +143,27 @@ const rpc = {
                 block.baseFee = promises[1].status == 'fulfilled' ? promises[1].value : null;
             }
 
+            // check if its a new block
+            let fetchState = 0;
             const sortedBlocks = Object.keys(this.blocks).sort();
-
-            let fetchSuccess = false;
-            if (block && block.transactions){
+            if (block && block.transactions) {
                 // save the block
                 this.recordBlock(block);
                 // call to update monited wallets. required only if want to monitor txs to target addresses
                 // db.updateWallets(block, args.network);
                 this.last = block.number + 1;
-                fetchSuccess = true;
+                fetchState = 1;
             }
-            else if (sortedBlocks.length < this.sampleSize){
+            if (sortedBlocks.length < this.sampleSize && sortedBlocks.length > 0){
                 // there is not a next block yet, fetch a previous block
                 const block = await this.getBlock(sortedBlocks[0] - 1);
-                this.recordBlock(block);
+                if (block && block.transactions) {
+                    this.recordBlock(block);
+                }
+                fetchState = -1;
             }
 
-            setTimeout(() => this.loop(), sortedBlocks.length < this.sampleSize ? 10 : ( args.timeInterval ? args.timeInterval : this.dynamicInterval(fetchSuccess) ));
+            setTimeout(() => this.loop(), this.dynamicInterval(fetchState));
         }
         catch (error){
             console.log(error);
@@ -204,6 +228,8 @@ const rpc = {
 
         // last block
         result.lastBlock = this.last;
+        // timestamp from last block
+        result.lastTime = b.slice(-1)[0].timestamp;
 
         fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
@@ -243,18 +269,25 @@ const rpc = {
         return result;
     },
 
-    dynamicInterval: function(success) {
+    dynamicInterval: function(state) {
         const speedFactor = 1.1;
-        if (success){
+        // not yet started
+        if (state === -1) {
+            this.timeInterval = 10;
+        }
+        // fetch success
+        if (state === 1){
             // increase speed
             this.timeInterval /= speedFactor;
+            this.timeInterval = Math.max(this.minInterval, this.timeInterval);
         }
+        // fetch fail
         else {
             // reduce speed
             this.timeInterval *= speedFactor;
+            this.timeInterval = Math.min(this.maxInterval, this.timeInterval);
         }
     
-        // console.log(this.timeInterval)
         return this.timeInterval;
     },
     
