@@ -172,7 +172,7 @@ const rpc = {
 
     recordBlock: function(block) {
         // extract the gas from transactions
-        const transactions = block.transactions.filter(t => t.gasPrice != '0').map(t => parseFloat(this.web3.utils.fromWei(t.gasPrice, 'gwei'))).sort((a,b) => a - b);
+        const transactions = block.transactions.filter(t => t.gasPrice && t.gasPrice != '0').map(t => parseFloat(this.web3.utils.fromWei(t.gasPrice, 'gwei'))).sort((a,b) => a - b);
         this.blocks[block.number] = {
             ntx: transactions.length,
             timestamp: block.timestamp,
