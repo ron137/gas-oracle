@@ -248,7 +248,7 @@ app.get('/', cors(), (req, res) => {
     return;
 });
 
-app.listen(port, () => {
+app.listen(port, 'localhost', () => {
     console.log(`Listening at http://localhost:${port}`);
 });
 
