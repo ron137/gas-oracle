@@ -110,11 +110,12 @@ const rpc = {
 
     loop: async function(){
         try {
-            // this.time = new Date().getTime();
-            let promises = [ this.getBlock() ];
+            // update scan to last block every 100 blocks
+            const toScan = this.last  % 100 == 0 ? 'latest' : this.last;
+            let promises = [ this.getBlock(toScan) ];
 
             if (!this.legacyGas) {
-                promises.push(this.getBaseFee());
+                promises.push(this.getBaseFee(toScan));
             }
 
             promises = await Promise.allSettled(promises);
