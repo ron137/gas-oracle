@@ -1,11 +1,35 @@
-sleep 1 && pm2 restart oracle_avax &
-sleep 300 && pm2 restart oracle_celo &
-sleep 600 && pm2 restart oracle_cronos &
-sleep 900 && pm2 restart oracle_eth &
-sleep 1200 && pm2 restart oracle_fantom &
-sleep 1500 && pm2 restart oracle_fuse &
-sleep 1800 && pm2 restart oracle_harmony &
-sleep 2100 && pm2 restart oracle_heco &
-sleep 2400 && pm2 restart oracle_moonriver &
-sleep 2700 && pm2 restart oracle_polygon &
-sleep 3000 && pm2 restart oracle_bsc &
+TOTAL=0
+
+pm2 restart oracle_avax &
+TOTAL=$((TOTAL+350))
+
+sleep $TOTAL && pm2 restart oracle_fantom &
+TOTAL=$((TOTAL+320))
+
+sleep $TOTAL && pm2 restart oracle_bsc &
+TOTAL=$((TOTAL+270))
+
+sleep $TOTAL && pm2 restart oracle_eth &
+TOTAL=$((TOTAL+450))
+
+sleep $TOTAL && pm2 restart oracle_polygon &
+TOTAL=$((TOTAL+550))
+
+sleep $TOTAL && pm2 restart oracle_moonriver &
+TOTAL=$((TOTAL+470))
+
+sleep $TOTAL && pm2 restart oracle_cronos &
+TOTAL=$((TOTAL+2400))
+
+sleep $TOTAL && pm2 restart oracle_harmony &
+TOTAL=$((TOTAL+280))
+
+sleep $TOTAL && pm2 restart oracle_heco &
+TOTAL=$((TOTAL+530))
+
+sleep $TOTAL && pm2 restart oracle_celo &
+TOTAL=$((TOTAL+100))
+
+sleep $TOTAL && pm2 restart oracle_fuse &
+
+TOTAL=$((TOTAL+660))

@@ -13,12 +13,12 @@
         {
             "name"        : "oracle_polygon",
             "script"      : "./oracle.js",
-            "args"        : "-n polygon -t 1900"
+            "args"        : "-n polygon -t 750"
         },
         {
             "name"        : "oracle_fantom",
             "script"      : "./oracle.js",
-            "args"        : "-n fantom -t 2200"
+            "args"        : "-n fantom -t 300"
         },
         {
             "name"        : "oracle_avax",
@@ -33,12 +33,12 @@
         {
             "name"        : "oracle_cronos",
             "script"      : "./oracle.js",
-            "args"        : "-n cronos -t 2200"
+            "args"        : "-n cronos -t 2500"
         },
         {
             "name"        : "oracle_harmony",
             "script"      : "./oracle.js",
-            "args"        : "-n harmony -t 6600"
+            "args"        : "-n harmony -t 850"
         },
         {
             "name"        : "oracle_heco",
