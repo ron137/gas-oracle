@@ -62,7 +62,7 @@ const rpc = {
             //     return false;
             // }
 
-            await this.updateLastBlock();
+            this.last = await this.web3.eth.getBlockNumber();
             this.connected = true;
             process.stdout.write(`Connected to ${args.network} RPC. Fetching ${this.sampleSize} blocks before serving data.\n`);
 
@@ -79,32 +79,13 @@ const rpc = {
         return true;
     },
 
-    updateLastBlock: async function() {
-        try {
-            this.last = await this.web3.eth.getBlockNumber();
-        }
-        // in case there is an error using getBlockNumber function
-        catch (error) {
-            try {
-                const block = await this.web3.eth.getBlock('latest');
-                this.last = block.number;
-            }
-            catch (error) {
-                console.log(error)
-            }
-        }
-        finally {
-            setTimeout(async () => await this.updateLastBlock(), 1000 * 3600); // update every hour
-        }
-    },
-
-    getBlock: async function(num) {
+    getBlock: async function(num='latest') {
         if (!this.connected){
             throw new Error('Not connected');
         }
 
         try {
-            const block = await this.web3.eth.getBlock(num || 'latest', true);
+            const block = await this.web3.eth.getBlock(num, true);
             return block;
         }
         catch(error){
@@ -113,9 +94,9 @@ const rpc = {
         }
     },
 
-    getBaseFee: async function(num) {
+    getBaseFee: async function(num='latest') {
         try {
-            const history = await this.web3.eth.getFeeHistory(1, num || 'latest', [0]);
+            const history = await this.web3.eth.getFeeHistory(1, num, [0]);
             if (history.baseFeePerGas) {
                 return parseInt(history.baseFeePerGas[0]) / 1000000000;
             }
@@ -130,10 +111,10 @@ const rpc = {
     loop: async function(){
         try {
             // this.time = new Date().getTime();
-            let promises = [ this.getBlock(this.last) ];
+            let promises = [ this.getBlock() ];
 
             if (!this.legacyGas) {
-                promises.push(this.getBaseFee(this.last));
+                promises.push(this.getBaseFee());
             }
 
             promises = await Promise.allSettled(promises);
@@ -146,7 +127,7 @@ const rpc = {
             // check if its a new block
             let fetchState = 0;
             const sortedBlocks = Object.keys(this.blocks).sort();
-            if (block && block.transactions) {
+            if (block && block.transactions && block.number >= this.last) {
                 // save the block
                 this.recordBlock(block);
                 // call to update monited wallets. required only if want to monitor txs to target addresses
@@ -161,6 +142,10 @@ const rpc = {
                     this.recordBlock(block);
                 }
                 fetchState = -1;
+            }
+
+            if (fetchState == 0) {
+                console.log(`Failed to fetch block ${ this.last }. I will try again in ${ this.timeInterval.toFixed(1) }ms`);
             }
 
             setTimeout(() => this.loop(), this.dynamicInterval(fetchState));
@@ -198,7 +183,7 @@ const rpc = {
             delete this.blocks[sortedBlocks[0]];
 
             this.calcBlockStats();
-            console.log(`${new Date().toISOString()}: New block ${this.last} read. Next update: ${this.timeInterval}`);
+            console.log(`${new Date().toISOString()}: New block ${block.number} read. Next update: ${this.timeInterval.toFixed(1)}ms`);
             // console.log(`Time: elapsed: ${new Date().getTime() - this.time}`);
         }
         else{
@@ -226,48 +211,49 @@ const rpc = {
         const result = Object.fromEntries(Object.keys(b[0]).map(e => [e, []]));
         b.forEach(block => Object.keys(result).forEach(key => result[key].push(block[key])));
 
+        const lastBlock = b.slice(-1)[0];
         // last block
-        result.lastBlock = this.last;
+        result.lastBlock = lastBlock.number;
         // timestamp from last block
-        result.lastTime = b.slice(-1)[0].timestamp;
+        result.lastTime = lastBlock.timestamp;
 
         fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
     },
 
     // if you want the oracle to return directly the speeds
-    calcSpeeds: function(){
-        // sort blocks by timestamp, then remove blocks with no tx
-        const b = Object.values(this.blocks).sort((a,b) => a.timestamp - b.timestamp).filter(e => e.ntx);
+    // calcSpeeds: function(){
+    //     // sort blocks by timestamp, then remove blocks with no tx
+    //     const b = Object.values(this.blocks).sort((a,b) => a.timestamp - b.timestamp).filter(e => e.ntx);
         
-        const avgTx = b.map(e => e.ntx).reduce((p,c) => p+c, 0) / b.length;
-        // avg time between the sample
-        const avgTime = (b.slice(-1)[0].timestamp - b[0].timestamp) / (b.length - 1);
+    //     const avgTx = b.map(e => e.ntx).reduce((p,c) => p+c, 0) / b.length;
+    //     // avg time between the sample
+    //     const avgTime = (b.slice(-1)[0].timestamp - b[0].timestamp) / (b.length - 1);
         
-        // sort gwei array ascending so I can pick directly by index
-        const sortedGwei = b.map(e => e.minGwei).sort((a,b) => parseFloat(a) - parseFloat(b));
-        const speeds = this.speedSize.map(speed => {
-            // get gwei corresponding to the slice of the array
-            const poolIndex = parseInt(speed / 100 * b.length) - 1;
-            const speedGwei = sortedGwei[poolIndex];
+    //     // sort gwei array ascending so I can pick directly by index
+    //     const sortedGwei = b.map(e => e.minGwei).sort((a,b) => parseFloat(a) - parseFloat(b));
+    //     const speeds = this.speedSize.map(speed => {
+    //         // get gwei corresponding to the slice of the array
+    //         const poolIndex = parseInt(speed / 100 * b.length) - 1;
+    //         const speedGwei = sortedGwei[poolIndex];
 
-            // get average time for each speed
-            const accepted = b.filter(e => e.minGwei <= speedGwei);
-            const avgTime = (accepted.slice(-1)[0].timestamp - accepted[0].timestamp) / (accepted.length - 1);
+    //         // get average time for each speed
+    //         const accepted = b.filter(e => e.minGwei <= speedGwei);
+    //         const avgTime = (accepted.slice(-1)[0].timestamp - accepted[0].timestamp) / (accepted.length - 1);
 
-            return speedGwei;
-        });
+    //         return speedGwei;
+    //     });
 
-        const result = {
-            lastBlock: this.last,
-            avgTime: avgTime,
-            avgTx: avgTx,
-            speeds: speeds,
-        }
+    //     const result = {
+    //         lastBlock: this.last,
+    //         avgTime: avgTime,
+    //         avgTx: avgTx,
+    //         speeds: speeds,
+    //     }
 
-        fs.writeFileSync(`${__dirname}/predicted_gwei.json`, JSON.stringify(result));
-        return result;
-    },
+    //     fs.writeFileSync(`${__dirname}/predicted_gwei.json`, JSON.stringify(result));
+    //     return result;
+    // },
 
     dynamicInterval: function(state) {
         const speedFactor = 1.1;
