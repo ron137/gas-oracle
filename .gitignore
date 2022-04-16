@@ -3,3 +3,4 @@ blockStats*
 .vscode
 db_file
 history
+package-lock.json
