@@ -162,6 +162,7 @@ const rpc = {
         this.blocks[block.number] = {
             ntx: transactions.length,
             timestamp: block.timestamp,
+            number: block.number,
             minGwei: [],
             avgGas: [],
         };
