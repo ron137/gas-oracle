@@ -1,0 +1,11 @@
+sleep 1 && pm2 restart oracle_avax &
+sleep 300 && pm2 restart oracle_celo &
+sleep 600 && pm2 restart oracle_cronos &
+sleep 900 && pm2 restart oracle_eth &
+sleep 1200 && pm2 restart oracle_fantom &
+sleep 1500 && pm2 restart oracle_fuse &
+sleep 1800 && pm2 restart oracle_harmony &
+sleep 2100 && pm2 restart oracle_heco &
+sleep 2400 && pm2 restart oracle_moonriver &
+sleep 2700 && pm2 restart oracle_polygon &
+sleep 3000 && pm2 restart oracle_bsc &

@@ -146,7 +146,7 @@ const rpc = {
             }
 
             if (fetchState == 0) {
-                console.log(`Failed to fetch block ${ this.last }. I will try again in ${ this.timeInterval.toFixed(1) }ms`);
+                console.log(`Failed to fetch new blocks (last ${ block.number }). I will try again in ${ this.timeInterval.toFixed(1) }ms`);
             }
 
             setTimeout(() => this.loop(), this.dynamicInterval(fetchState));
@@ -161,6 +161,7 @@ const rpc = {
         const transactions = block.transactions.filter(t => t.gasPrice && t.gasPrice != '0').map(t => parseFloat(this.web3.utils.fromWei(t.gasPrice, 'gwei'))).sort((a,b) => a - b);
         this.blocks[block.number] = {
             ntx: transactions.length,
+            number: block.number,
             timestamp: block.timestamp,
             minGwei: [],
             avgGas: [],
