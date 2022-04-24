@@ -36,7 +36,7 @@ const rpc = {
 
         try {
             // this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network]));
-            if (!(await this.loadRPC())) {
+            if (!(await this.loadRPC({ first: true }))) {
                 throw new Error('Network not available');
             }
 
@@ -77,7 +77,7 @@ const rpc = {
         return this.web3;
     },
 
-    loadRPC: async function() {
+    loadRPC: async function({ index=false, first=false }={}) {
         const url = require(`./rpcs.json`);
 
         // no network, or wrong network passed
@@ -88,6 +88,12 @@ const rpc = {
         // there is only one rpc
         if (!Array.isArray(url[args.network])) {
             this.web3 = new Web3(url[args.network]);
+            return true;
+        }
+
+        // there is index arg
+        if (index) {
+            this.web3 = new Web3(url[args.network][index]);
             return true;
         }
 
@@ -112,6 +118,19 @@ const rpc = {
             // filter only non-error rpcs
             // sort ascending and get first = best rpc
             return lastBlocks.filter(e => !e.error).sort((a,b) => b.lastBlock - a.lastBlock)[0];
+        }
+
+        if (first) {
+            const firstRPC = (await Promise.allSettled(url[args.network].map(async rpc => {
+                try {
+                    const web3 = new Web3(rpc);
+                    await web3.eth.getBlock('latest', true);
+                    return rpc;
+                }
+                catch(error) {}
+            }))).find(e => e.status == 'fulfilled');
+            this.web3 = new Web3(firstRPC.value);
+            return true;
         }
 
         // this is the first time run
