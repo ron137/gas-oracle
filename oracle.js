@@ -94,14 +94,24 @@ const rpc = {
         const getBestRPC = async () => {
             // from all rpcs, return last block from all in an object
             const lastBlocks = await Promise.all(url[args.network].map(async rpc => {
-                const web3 = new Web3(rpc);
-                return { 
-                    rpc: rpc,
-                    lastBlock: await web3.eth.getBlockNumber(),
-                };
+                try {
+                    const web3 = new Web3(rpc);
+                    return { 
+                        rpc: rpc,
+                        lastBlock: await web3.eth.getBlockNumber(),
+                    };
+                }
+                catch(error) {
+                    return {
+                        rpc: rpc,
+                        error: error,
+                    }
+                }
             }));
+            // console.log(lastBlocks)
+            // filter only non-error rpcs
             // sort ascending and get first = best rpc
-            return lastBlocks.sort((a,b) => b.lastBlock - a.lastBlock)[0];
+            return lastBlocks.filter(e => !e.error).sort((a,b) => b.lastBlock - a.lastBlock)[0];
         }
 
         // this is the first time run
