@@ -192,11 +192,19 @@ const rpc = {
                 fetchState = 1;
             }
             if (sortedBlocks.length < this.sampleSize && sortedBlocks.length > 0){
-                // there is not a next block yet, fetch a previous block
-                const block = await this.getBlock(sortedBlocks[0] - 1);
-                if (block && block.transactions) {
-                    this.recordBlock(block);
+                // get block already in the stat file
+                const exBlock = this.getExistingBlock(sortedBlocks[0] - 1);
+                if (exBlock) {
+                    this.recordBlock(exBlock, true);
                 }
+                else {
+                    // there is not a next block yet, fetch a previous block
+                    const block = await this.getBlock(sortedBlocks[0] - 1);
+                    if (block && block.transactions) {
+                        this.recordBlock(block);
+                    }
+                }
+
                 fetchState = -1;
             }
 
@@ -212,26 +220,41 @@ const rpc = {
         }
     },
 
-    recordBlock: function(block) {
-        // extract the gas from transactions
-        const transactions = block.transactions.filter(t => t.gasPrice && t.gasPrice != '0').map(t => parseFloat(this.web3.utils.fromWei(t.gasPrice, 'gwei'))).sort((a,b) => a - b);
-        this.blocks[block.number] = {
-            ntx: transactions.length,
-            timestamp: block.timestamp,
-            minGwei: [],
-            avgGas: [],
-        };
+    recordBlock: function(block, cache=false) {
+        if (cache) {
+            this.blocks[block.number] = {
+                ntx: block.ntx,
+                timestamp: block.timestamp,
+                minGwei: block.minGwei,
+                avgGas: block.avgGas,
+            };
 
-        if (!this.legacyGas){
-            this.blocks[block.number].baseFee = block.baseFee;
+            if (block.baseFee) {
+                this.blocks[block.number].baseFee = block.baseFee;
+            }
+            console.log(`Block ${block.number} hit cache`);
         }
+        else {
+            // extract the gas from transactions
+            const transactions = block.transactions.filter(t => t.gasPrice && t.gasPrice != '0').map(t => parseFloat(this.web3.utils.fromWei(t.gasPrice, 'gwei'))).sort((a,b) => a - b);
+            this.blocks[block.number] = {
+                ntx: transactions.length,
+                timestamp: block.timestamp,
+                minGwei: [],
+                avgGas: [],
+            };
 
-        if (transactions.length){
-            // set average gas per tx in the block
-            const avgGas = parseInt(block.gasUsed) / transactions.length;
+            if (!this.legacyGas){
+                this.blocks[block.number].baseFee = block.baseFee;
+            }
 
-            this.blocks[block.number].minGwei = transactions;
-            this.blocks[block.number].avgGas = avgGas;
+            if (transactions.length){
+                // set average gas per tx in the block
+                const avgGas = parseInt(block.gasUsed) / transactions.length;
+
+                this.blocks[block.number].minGwei = transactions;
+                this.blocks[block.number].avgGas = avgGas;
+            }
         }
 
         // sort the blocks and discard if higher than sampleSize
@@ -276,6 +299,22 @@ const rpc = {
 
         fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
+    },
+
+    getExistingBlock: function(num) {
+        const stats = require(`./blockStats_${args.network}.json`);
+
+        // there is no such block in cache
+        if (num <= stats.lastBlock - stats.ntx.length || num > stats.lastBlock){
+            return false;
+        }
+
+        // get the index to be fetched from the file
+        const index = stats.ntx.length - (stats.lastBlock - num) - 1;
+        // build a new stats object, where only the index element is present in array values
+        const block = Object.fromEntries(Object.keys(stats).filter(e => Array.isArray(stats[e])).map(e => [ e, stats[e][index] ]));
+        block.number = num;
+        return block;
     },
 
     // if you want the oracle to return directly the speeds
