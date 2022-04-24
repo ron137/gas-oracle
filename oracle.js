@@ -213,11 +213,12 @@ const rpc = {
         const result = Object.fromEntries(Object.keys(b[0]).map(e => [e, []]));
         b.forEach(block => Object.keys(result).forEach(key => result[key].push(block[key])));
 
-        const lastBlock = b.slice(-1)[0];
         // last block
-        result.lastBlock = lastBlock.number;
+        const lastBlock = parseInt(Object.keys(this.blocks).sort((a,b) => parseInt(b) - parseInt(a))[0]);
+        result.lastBlock = lastBlock;
         // timestamp from last block
-        result.lastTime = lastBlock.timestamp;
+        result.lastTime = this.blocks[lastBlock].timestamp;
+        console.log(result);
 
         fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
