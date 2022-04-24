@@ -1,13 +1,49 @@
 {
-    "polygon": "https://polygon-rpc.com/",
-    "ethereum": "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-    "bsc": "https://bsc-dataseed.binance.org",
-    "avax": "https://api.avax.network/ext/bc/C/rpc",
-    "fantom": "https://rpc.ftm.tools",
-    "moonriver": "https://rpc.api.moonriver.moonbeam.network",
-    "cronos": "https://evm-cronos.crypto.org",
-    "harmony": "https://api.harmony.one/",
+    "polygon": [
+        "https://polygon-rpc.com",
+        "https://rpc-mainnet.matic.network",
+        "https://rpc-mainnet.maticvigil.com",
+        "https://rpc-mainnet.matic.quiknode.pro",
+        "https://matic-mainnet.chainstacklabs.com"
+    ],
+    "ethereum": [
+        "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+        "https://main-light.eth.linkpool.io",
+        "https://rpc.ankr.com/eth"
+    ],
+    "bsc": [
+        "https://bsc-dataseed.binance.org",
+        "https://rpc.ankr.com/bsc",
+        "https://bsc-dataseed1.defibit.io",
+        "https://bsc-dataseed1.ninicoin.io"
+    ],
+    "avax": [
+        "https://api.avax.network/ext/bc/C/rpc",
+        "https://rpc.ankr.com/avalanche"
+    ],
+    "fantom": [
+        "https://rpc.ftm.tools",
+        "https://rpcapi.fantom.network",
+        "https://rpc.fantom.network",
+        "https://rpc.ankr.com/fantom",
+        "https://rpc2.fantom.network"
+    ],
+    "moonriver": [
+        "https://rpc.api.moonriver.moonbeam.network",
+        "https://rpc.moonriver.moonbeam.network"
+    ],
+    "cronos": [
+        "https://evm-cronos.crypto.org",
+        "https://evm.cronos.org"
+    ],
+    "harmony": [
+        "https://api.harmony.one",
+        "https://harmony-0-rpc.gateway.pokt.network"
+    ],
     "heco": "https://http-mainnet.hecochain.com",
-    "celo": "https://forno.celo.org",
+    "celo": [
+        "https://forno.celo.org",
+        "https://rpc.ankr.com/celo"
+    ],
     "fuse": "https://rpc.fuse.io"
 }
