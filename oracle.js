@@ -31,7 +31,7 @@ const rpc = {
     maxInterval: 15000,
 
     connect: async function(){
-        const url = JSON.parse(fs.readFileSync(`rpcs.json`));
+        const url = require(`./rpcs.json`);
 
         if (!url[args.network]){
             throw new Error('Network not available');
@@ -40,9 +40,15 @@ const rpc = {
         console.log('Starting gas oracle...');
 
         try {
-            // this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network || 'ethereum']));
-            this.web3 = new Web3(url[args.network || 'ethereum']);
-            // this.web3.setProvider(url[args.network || 'ethereum']);
+            // this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network]));
+            if (Array.isArray(url[args.network])) {
+                this.web3 = new Web3(url[args.network][0]);
+                this.rpcIndex = 0;
+            }
+            else {
+                this.web3 = new Web3(url[args.network]);
+            }
+            // this.web3.setProvider(url[args.network]);
             // this.web3.eth.extend({
             //     property: 'txpool',
             //     methods: [{
@@ -76,7 +82,7 @@ const rpc = {
             return new Error(error);
         }
 
-        return true;
+        return this.web3;
     },
 
     getBlock: async function(num='latest') {
@@ -156,16 +162,33 @@ const rpc = {
         }
     },
 
+    switchRPC: function(timestamp) {
+        const timeLimit = 300; // 5 minutes
+        const timeDiff = Math.abs(new Date().getTime() / 1000 - timestamp);
+
+        if (timeDiff > timeLimit) {
+            const url = require(`./rpcs.json`);
+            let rpcURL = url[args.network];
+            if (Array.isArray(url[args.network])) {
+                this.rpcIndex = (this.rpcIndex + 1) % url[args.network].length;
+                rpcURL = url[args.network][this.rpcIndex];
+                console.log(`Switching rpc to ${ rpcURL }`);
+            }
+            this.web3 = new Web3(rpcURL);
+        }
+    },
+
     recordBlock: function(block) {
         // extract the gas from transactions
         const transactions = block.transactions.filter(t => t.gasPrice && t.gasPrice != '0').map(t => parseFloat(this.web3.utils.fromWei(t.gasPrice, 'gwei'))).sort((a,b) => a - b);
         this.blocks[block.number] = {
             ntx: transactions.length,
             timestamp: block.timestamp,
-            number: block.number,
             minGwei: [],
             avgGas: [],
         };
+
+        this.switchRPC(block.timestamp);
 
         if (!this.legacyGas){
             this.blocks[block.number].baseFee = block.baseFee;
@@ -218,7 +241,6 @@ const rpc = {
         result.lastBlock = lastBlock;
         // timestamp from last block
         result.lastTime = this.blocks[lastBlock].timestamp;
-        console.log(result);
 
         fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
@@ -383,6 +405,6 @@ const rpc = {
     //     fs.writeFileSync(`${__dirname}/predict_time.json`, JSON.stringify(minedPool.map(e => e.map(e => e.length))));
     //     console.log('DONE')
     // }
-}
+};
 
 rpc.connect().then(() => rpc.loop(), console.log);
