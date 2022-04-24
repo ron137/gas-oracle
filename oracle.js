@@ -31,23 +31,15 @@ const rpc = {
     maxInterval: 15000,
 
     connect: async function(){
-        const url = require(`./rpcs.json`);
-
-        if (!url[args.network]){
-            throw new Error('Network not available');
-        }
 
         console.log('Starting gas oracle...');
 
         try {
             // this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network]));
-            if (Array.isArray(url[args.network])) {
-                this.web3 = new Web3(url[args.network][0]);
-                this.rpcIndex = 0;
+            if (!(await this.loadRPC())) {
+                throw new Error('Network not available');
             }
-            else {
-                this.web3 = new Web3(url[args.network]);
-            }
+
             // this.web3.setProvider(url[args.network]);
             // this.web3.eth.extend({
             //     property: 'txpool',
@@ -83,6 +75,53 @@ const rpc = {
         }
 
         return this.web3;
+    },
+
+    loadRPC: async function() {
+        const url = require(`./rpcs.json`);
+
+        // no network, or wrong network passed
+        if (!url[args.network]){
+            return false;
+        }
+
+        // there is only one rpc
+        if (!Array.isArray(url[args.network])) {
+            this.web3 = new Web3(url[args.network]);
+            return true;
+        }
+
+        const getBestRPC = async () => {
+            // from all rpcs, return last block from all in an object
+            const lastBlocks = await Promise.all(url[args.network].map(async rpc => {
+                const web3 = new Web3(rpc);
+                return { 
+                    rpc: rpc,
+                    lastBlock: await web3.eth.getBlockNumber(),
+                };
+            }));
+            // sort ascending and get first = best rpc
+            return lastBlocks.sort((a,b) => b.lastBlock - a.lastBlock)[0];
+        }
+
+        // this is the first time run
+        if (!this.web3) {
+            this.web3 = new Web3((await getBestRPC()).rpc);
+            return true;
+        }
+
+        // calculate time diff between last reported timestamp and now
+        const stats = require(`./blockStats_${args.network}.json`);
+        const timeDiff = Math.abs(new Date().getTime() / 1000 - stats.lastTime);    
+        const timeLimit = 300; // 5 minutes
+        if (timeDiff > timeLimit) {
+            const bestRPC = await getBestRPC();
+            console.log(`Switching rpc to ${ bestRPC.rpc }`);
+            this.web3 = new Web3(bestRPC.rpc);
+            return true;
+        }
+
+        return false;
     },
 
     getBlock: async function(num='latest') {
@@ -153,28 +192,13 @@ const rpc = {
 
             if (fetchState == 0) {
                 console.log(`Failed to fetch new blocks. I will try again in ${ this.timeInterval.toFixed(1) }ms`);
+                await this.loadRPC();
             }
 
             setTimeout(() => this.loop(), this.dynamicInterval(fetchState));
         }
         catch (error){
             console.log(error);
-        }
-    },
-
-    switchRPC: function(timestamp) {
-        const timeLimit = 300; // 5 minutes
-        const timeDiff = Math.abs(new Date().getTime() / 1000 - timestamp);
-
-        if (timeDiff > timeLimit) {
-            const url = require(`./rpcs.json`);
-            let rpcURL = url[args.network];
-            if (Array.isArray(url[args.network])) {
-                this.rpcIndex = (this.rpcIndex + 1) % url[args.network].length;
-                rpcURL = url[args.network][this.rpcIndex];
-                console.log(`Switching rpc to ${ rpcURL }`);
-            }
-            this.web3 = new Web3(rpcURL);
         }
     },
 
@@ -187,8 +211,6 @@ const rpc = {
             minGwei: [],
             avgGas: [],
         };
-
-        this.switchRPC(block.timestamp);
 
         if (!this.legacyGas){
             this.blocks[block.number].baseFee = block.baseFee;
