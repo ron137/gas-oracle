@@ -201,7 +201,7 @@ const rpc = {
 
             // check if its a new block
             let fetchState = 0;
-            const sortedBlocks = Object.keys(this.blocks).sort();
+            let sortedBlocks = Object.keys(this.blocks).sort();
             if (block && block.transactions && block.number >= this.last) {
                 // save the block
                 this.recordBlock(block);
@@ -212,16 +212,18 @@ const rpc = {
             }
             if (sortedBlocks.length < this.sampleSize && sortedBlocks.length > 0){
                 // get block already in the stat file
-                const exBlock = this.getExistingBlock(sortedBlocks[0] - 1);
-                if (exBlock) {
+
+                let exBlock = this.getExistingBlock(sortedBlocks[0] - 1);
+                while (exBlock) {
                     this.recordBlock(exBlock, true);
+                    sortedBlocks = Object.keys(this.blocks).sort();
+                    exBlock = this.getExistingBlock(sortedBlocks[0] - 1);
                 }
-                else {
-                    // there is not a next block yet, fetch a previous block
-                    const block = await this.getBlock(sortedBlocks[0] - 1);
-                    if (block && block.transactions) {
-                        this.recordBlock(block);
-                    }
+
+                // there is not a next block yet, fetch a previous block
+                const newblock = await this.getBlock(sortedBlocks[0] - 1);
+                if (newblock && newblock.transactions) {
+                    this.recordBlock(newblock);
                 }
 
                 fetchState = -1;
