@@ -88,6 +88,7 @@ const rpc = {
         // there is only one rpc
         if (!Array.isArray(url[args.network])) {
             this.web3 = new Web3(url[args.network]);
+            this.rpc = url[args.network];
             return true;
         }
 
