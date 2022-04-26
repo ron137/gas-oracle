@@ -140,7 +140,7 @@ const rpc = {
         }
 
         // calculate time diff between last reported timestamp and now
-        const stats = require(`./blockStats_${args.network}.json`);
+        const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
         const timeDiff = Math.abs(new Date().getTime() / 1000 - stats.lastTime);    
         const timeLimit = 300; // 5 minutes
         if (timeDiff > timeLimit) {
@@ -318,12 +318,12 @@ const rpc = {
         // timestamp from last block
         result.lastTime = this.blocks[lastBlock].timestamp;
 
-        fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
+        fs.writeFileSync(`./blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
     },
 
     getExistingBlock: function(num) {
-        const stats = require(`./blockStats_${args.network}.json`);
+        const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
 
         // there is no such block in cache
         if (num <= stats.lastBlock - stats.ntx.length || num > stats.lastBlock){
