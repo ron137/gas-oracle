@@ -76,6 +76,7 @@ On a successful request, a json will be returned with the following fields:
 * ```baseFee```: **number array**. Base gas fee from each block. Only present for [EIP-1559](https://notes.ethereum.org/@vbuterin/eip-1559-faq) compliant networks;
 * ```lastBlock```: **number**. Last block number retrieved by the oracle.
 * ```lastTime```: **number**. Timestamp from last block.
+* ```rpc```: **string**. RPC url which the oracle is retrieving information from.
 
 ### Sample response
 
@@ -86,7 +87,8 @@ On a successful request, a json will be returned with the following fields:
   "minGwei": [1,2,1,3,2],
   "avgGas": [10000,10000,10000,10000,10000],
   "lastBlock": 12345,
-  "lastTime": 1646540323
+  "lastTime": 1646540323,
+  "rpc": "RPC_URL"
 }
 ```
 

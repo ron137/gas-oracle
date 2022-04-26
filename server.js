@@ -135,6 +135,7 @@ app.get('/:network/blocks', cors(), async (req, res) => {
     res.send(data);
 });
 
+
 // get tx info from address
 app.get('/tx/:address', cors(), async (req, res) => {
     res.status(404);

@@ -130,12 +130,13 @@ const rpc = {
                 catch(error) {}
             }))).find(e => e.status == 'fulfilled');
             this.web3 = new Web3(firstRPC.value);
+            this.rpc = firstRPC.value;
             return true;
         }
 
         // this is the first time run
         if (!this.web3) {
-            this.web3 = new Web3((await getBestRPC()).rpc);
+            await loadBestRPC();
             return true;
         }
 
@@ -144,11 +145,16 @@ const rpc = {
         const timeDiff = Math.abs(new Date().getTime() / 1000 - stats.lastTime);    
         const timeLimit = 300; // 5 minutes
         if (timeDiff > timeLimit) {
-            console.log(new Date().getTime() / 1000, stats.lastTime);
-            const bestRPC = await getBestRPC();
+            // console.log(new Date().getTime() / 1000, stats.lastTime);
             console.log(`Switching rpc to ${ bestRPC.rpc }`);
-            this.web3 = new Web3(bestRPC.rpc);
+            await loadBestRPC();
             return true;
+        }
+
+        const loadBestRPC = async () => {
+            const bestRPC = await getBestRPC();
+            this.web3 = new Web3(bestRPC.rpc);
+            this.rpc = bestRPC.rpc;
         }
 
         return false;
@@ -318,6 +324,8 @@ const rpc = {
         result.lastBlock = lastBlock;
         // timestamp from last block
         result.lastTime = this.blocks[lastBlock].timestamp;
+        // rpc
+        result.rpc = this.rpc;
 
         fs.writeFileSync(`./blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
