@@ -140,10 +140,11 @@ const rpc = {
         }
 
         // calculate time diff between last reported timestamp and now
-        const stats = require(`./blockStats_${args.network}.json`);
+        const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
         const timeDiff = Math.abs(new Date().getTime() / 1000 - stats.lastTime);    
         const timeLimit = 300; // 5 minutes
         if (timeDiff > timeLimit) {
+            console.log(new Date().getTime() / 1000, stats.lastTime);
             const bestRPC = await getBestRPC();
             console.log(`Switching rpc to ${ bestRPC.rpc }`);
             this.web3 = new Web3(bestRPC.rpc);
@@ -323,7 +324,7 @@ const rpc = {
     },
 
     getExistingBlock: function(num) {
-        const stats = require(`./blockStats_${args.network}.json`);
+        const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
 
         // there is no such block in cache
         if (num <= stats.lastBlock - stats.ntx.length || num > stats.lastBlock){
@@ -376,7 +377,7 @@ const rpc = {
         const speedFactor = 1.1;
         // not yet started
         if (state === -1) {
-            this.timeInterval = 10;
+            return 10;
         }
         // fetch success
         if (state === 1){
