@@ -214,7 +214,7 @@ const rpc = {
                 // get block already in the stat file
 
                 let exBlock = this.getExistingBlock(sortedBlocks[0] - 1);
-                while (exBlock) {
+                while (exBlock && sortedBlocks.length < this.sampleSize) {
                     this.recordBlock(exBlock, true);
                     sortedBlocks = Object.keys(this.blocks).sort();
                     exBlock = this.getExistingBlock(sortedBlocks[0] - 1);
