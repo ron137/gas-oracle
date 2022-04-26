@@ -319,7 +319,7 @@ const rpc = {
         // timestamp from last block
         result.lastTime = this.blocks[lastBlock].timestamp;
 
-        fs.writeFileSync(`${__dirname}/blockStats_${args.network}.json`, JSON.stringify(result));
+        fs.writeFileSync(`./blockStats_${args.network}.json`, JSON.stringify(result));
         return result;
     },
 
