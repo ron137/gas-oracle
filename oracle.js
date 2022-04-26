@@ -134,6 +134,12 @@ const rpc = {
             return true;
         }
 
+        const loadBestRPC = async () => {
+            const bestRPC = await getBestRPC();
+            this.web3 = new Web3(bestRPC.rpc);
+            this.rpc = bestRPC.rpc;
+        }
+
         // this is the first time run
         if (!this.web3) {
             await loadBestRPC();
@@ -146,15 +152,9 @@ const rpc = {
         const timeLimit = 300; // 5 minutes
         if (timeDiff > timeLimit) {
             // console.log(new Date().getTime() / 1000, stats.lastTime);
-            console.log(`Switching rpc to ${ bestRPC.rpc }`);
             await loadBestRPC();
+            console.log(`Switching rpc to ${ this.rpc }`);
             return true;
-        }
-
-        const loadBestRPC = async () => {
-            const bestRPC = await getBestRPC();
-            this.web3 = new Web3(bestRPC.rpc);
-            this.rpc = bestRPC.rpc;
         }
 
         return false;
