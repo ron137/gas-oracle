@@ -34,7 +34,8 @@
     ],
     "cronos": [
         "https://evm-cronos.crypto.org",
-        "https://evm.cronos.org"
+        "https://evm.cronos.org",
+        "https://rpc.artemisone.org/cronos"
     ],
     "harmony": [
         "https://api.harmony.one",
