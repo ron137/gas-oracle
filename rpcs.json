@@ -30,16 +30,22 @@
     ],
     "moonriver": [
         "https://rpc.api.moonriver.moonbeam.network",
-        "https://rpc.moonriver.moonbeam.network"
+        "https://rpc.moonriver.moonbeam.network",
+        "https://moonriver.api.onfinality.io/public"
     ],
     "cronos": [
         "https://evm-cronos.crypto.org",
         "https://evm.cronos.org",
-        "https://rpc.artemisone.org/cronos"
+        "https://rpc.artemisone.org/cronos",
+        "https://gateway.nebkas.ro",
+        "https://cronosrpc-1.xstaking.sg",
+        "https://cronos-rpc.elk.finance"
+
     ],
     "harmony": [
         "https://api.harmony.one",
-        "https://harmony-0-rpc.gateway.pokt.network"
+        "https://harmony-0-rpc.gateway.pokt.network",
+        "https://s2.api.harmony.one"
     ],
     "heco": "https://http-mainnet.hecochain.com",
     "celo": [
