@@ -45,12 +45,19 @@
     "harmony": [
         "https://api.harmony.one",
         "https://harmony-0-rpc.gateway.pokt.network",
-        "https://s2.api.harmony.one"
+        "https://s2.api.harmony.one",
+        "https://sin.api.harmony.one"
     ],
-    "heco": "https://http-mainnet.hecochain.com",
+    "heco": [
+        "https://http-mainnet.hecochain.com",
+        "https://http-mainnet-node.huobichain.com"
+    ],
     "celo": [
         "https://forno.celo.org",
         "https://rpc.ankr.com/celo"
     ],
-    "fuse": "https://rpc.fuse.io"
+    "fuse": [
+        "https://rpc.fuse.io",
+        "https://fuse-rpc.gateway.pokt.network"
+    ]
 }
