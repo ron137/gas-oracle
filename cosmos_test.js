@@ -160,7 +160,26 @@ const blocks = {};
 
             lastBlock = currentBlock;
         }
-        else {
+
+        // get previous blocks
+        if (Object.keys(blocks).length < args.sampleSize) {
+            // get batches of 10 blocks
+
+            for (let i=0 ; i<10 ; i++) {
+                const firstBlock = Object.keys(blocks).sort((a,b) => a-b)[0];
+    
+                const getPrevBlock = async blockNumber => {
+                    const block = await getBlock(blockNumber);
+                    return block ? block : await getPrevBlock(blockNumber - 1);
+                };
+                const block = await getPrevBlock(firstBlock - 1);
+                recordBlocks(block);
+    
+                state = -1;
+            }
+        }
+
+        if (state === 0) {
             console.log(`Failed to fetch new blocks. I will try again in ${ timeInterval.toFixed(1) }ms`);
         }
 
