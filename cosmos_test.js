@@ -27,18 +27,37 @@ const blocks = {};
         const res = await fetch(`${url}/block`);
         const block = await res.json();
         // console.log(block)
-        const height = block.result.block.header.height;
+        const height = parseInt(block.result.block.header.height);
 
         return height;
     };
 
     // get a list of gas prices for every tx in the block
     const getBlock = async blockNumber => {
-        const url = 'https://api.cosmos.network/cosmos/tx/v1beta1';
-        const res = await fetch(`${url}/txs?events=tx.height=${blockNumber}`);
-        const tx = await res.json();
-        // console.log(tx)
-        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+            console.log('Request timed out');
+        }, 10000);
+      
+        let tx;
+        try {
+            const url = 'https://api.cosmos.network/cosmos/tx/v1beta1';
+            const res = await fetch(`${url}/txs?events=tx.height=${blockNumber}`, { signal: controller.signal });
+            tx = await res.json();
+        }
+        catch (error) {
+            console.log(error);
+            return false;
+        }
+      
+        clearTimeout(timeoutId);
+        // console.log('txs:' + tx.txs.length)
+
+        if (!tx.txs) {
+            return false;
+        }
+
         const gasList = tx.txs.map(e => {
             try {
                 if (!e.auth_info.fee.amount.length) {
@@ -52,6 +71,11 @@ const blocks = {};
                 return 0;
             }
         }).filter(e => parseFloat(e) > 0);
+        // console.log(gasList);
+
+        if (!gasList.length) {
+            return false;
+        }
 
         const block = {
             gasList: gasList,
@@ -118,6 +142,7 @@ const blocks = {};
             avgGas: block.avgGas,
         };
 
+        // console.log(block)
         // sort the blocks and discard if higher than sampleSize
         const sortedBlocks = Object.keys(blocks).sort((a,b) => parseInt(a) - parseInt(b));
         if (sortedBlocks.length > args.sampleSize){
@@ -142,41 +167,46 @@ const blocks = {};
 
     };
 
+    lastBlock = await getBlockHeight();
+
     // loop function
     const loop = async () => {
-        const currentBlock = await getBlockHeight();
-        // console.log(currentBlock);
-
         let state = 0;
-        if (currentBlock > lastBlock) {
-            const block = await getBlock(currentBlock);
-            // console.log(block)
 
-            if (block) {
-                // console.log(block);
+        const block = await getBlock(lastBlock);
+        // console.log(block, lastBlock);
+
+        if (block) {
+            // console.log(block);
+            if (block.gasList.length) {
                 recordBlocks(block);
-                state = 1;
             }
-
-            lastBlock = currentBlock;
+            state = 1;
+            lastBlock = lastBlock + 1;
+        }
+        else {
+            // some blocks jump in cosmos, so we always get block height when fail
+            lastBlock = Math.max(await getBlockHeight(), lastBlock);
         }
 
         // get previous blocks
-        if (Object.keys(blocks).length < args.sampleSize) {
-            // get batches of 10 blocks
+        const sizeNow = Object.keys(blocks).length;
+        if (sizeNow && sizeNow < args.sampleSize) {
+            const firstBlock = Object.keys(blocks).sort((a,b) => a-b)[0];
 
-            for (let i=0 ; i<10 ; i++) {
-                const firstBlock = Object.keys(blocks).sort((a,b) => a-b)[0];
-    
-                const getPrevBlock = async blockNumber => {
-                    const block = await getBlock(blockNumber);
-                    return block ? block : await getPrevBlock(blockNumber - 1);
-                };
-                const block = await getPrevBlock(firstBlock - 1);
-                recordBlocks(block);
-    
-                state = -1;
+            const blockReq = [];
+            // make all requests at once (max 100)
+            for (let i=0 ; i < Math.min(100, args.sampleSize - sizeNow) ; i++) {
+                blockReq.push(getBlock(firstBlock - i));
             }
+            const blockRes = await Promise.all(blockReq);
+            blockRes.forEach(block => {
+                if (block && block.gasList.length) {
+                    recordBlocks(block)
+                }
+            });
+
+            state = -1;
         }
 
         if (state === 0) {
