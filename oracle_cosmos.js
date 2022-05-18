@@ -166,7 +166,7 @@ const calcBlockStats = () => {
     result.lastBlock = lastBlock;
     // timestamp from last block
     result.lastTime = blocks[lastBlock].timestamp;
-    result.api = apiURL;
+    result.rpc = apiURL;
 
     fs.writeFileSync(`./blockStats_${args.network}.json`, JSON.stringify(result));
     return result;
@@ -177,7 +177,7 @@ const recordBlocks = async block => {
     blocks[block.number] = {
         ntx: block.feeList.length,
         timestamp: block.timestamp,
-        minFee: block.feeList.sort((a,b) => a-b),
+        minGwei: block.feeList.sort((a,b) => a-b),
         avgGas: block.avgGas,
     };
 
