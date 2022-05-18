@@ -2,58 +2,73 @@
     "apps" : [
         {
             "name"        : "oracle_eth",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n ethereum -t 8500"
         },
         {
             "name"        : "oracle_bsc",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n bsc -t 1400"
         },
         {
             "name"        : "oracle_polygon",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n polygon -t 750"
         },
         {
             "name"        : "oracle_fantom",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n fantom -t 300"
         },
         {
             "name"        : "oracle_avax",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n avax -t 850"
         },
         {
             "name"        : "oracle_moonriver",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n moonriver -t 12000"
         },
         {
             "name"        : "oracle_cronos",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n cronos -t 2500"
         },
         {
             "name"        : "oracle_harmony",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n harmony -t 850"
         },
         {
             "name"        : "oracle_heco",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n heco -t 1200"
         },
         {
             "name"        : "oracle_celo",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n celo -t 2500"
         },
         {
             "name"        : "oracle_fuse",
-            "script"      : "./oracle.js",
+            "script"      : "./oracle_evm.js",
             "args"        : "-n fuse -t 2300"
+        },
+        {
+            "name"        : "oracle_cosmoshub",
+            "script"      : "./oracle_cosmos.js",
+            "args"        : "-n cosmoshub -t 7000"
+        },
+        {
+            "name"        : "oracle_osmosis",
+            "script"      : "./oracle_cosmos.js",
+            "args"        : "-n osmosis -t 10000"
+        },
+        {
+            "name"        : "oracle_juno",
+            "script"      : "./oracle_cosmos.js",
+            "args"        : "-n juno -t 7000"
         },
         {
             "name"        : "oracle_server",

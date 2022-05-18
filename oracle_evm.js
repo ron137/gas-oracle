@@ -333,7 +333,13 @@ const rpc = {
     },
 
     getExistingBlock: function(num) {
-        const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
+        let stats;
+        try {
+            stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
+        }
+        catch (error) {
+            return false;
+        }
 
         // there is no such block in cache
         if (num <= stats.lastBlock - stats.ntx.length || num > stats.lastBlock){
