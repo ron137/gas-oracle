@@ -166,6 +166,7 @@ const calcBlockStats = () => {
     result.lastBlock = lastBlock;
     // timestamp from last block
     result.lastTime = blocks[lastBlock].timestamp;
+    result.api = apiURL;
 
     fs.writeFileSync(`./blockStats_${args.network}.json`, JSON.stringify(result));
     return result;
