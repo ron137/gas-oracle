@@ -177,7 +177,7 @@ const recordBlocks = async block => {
     blocks[block.number] = {
         ntx: block.feeList.length,
         timestamp: block.timestamp,
-        minGwei: block.feeList.sort((a,b) => a-b),
+        minFee: block.feeList.sort((a,b) => a-b),
         avgGas: block.avgGas,
     };
 

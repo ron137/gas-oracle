@@ -38,7 +38,9 @@ app.get('/:network', cors(), (req, res) => {
         if (req.query.nth && !isNaN(req.query.nth)){
             nth = Math.max(0.01, parseFloat(req.query.nth));
         }
-        stats.minGwei = stats.minGwei.map(b => {
+
+        const feeName = stats.minGwei ? 'minGwei' : 'minFee';
+        stats[feeName] = stats[feeName].map(b => {
             let i = b.length - 1;
             if (nth > 0 && nth < 1){
                 i = Math.max(0, parseInt(b.length * nth - 1));
