@@ -210,7 +210,15 @@ const recordBlocks = async block => {
 // check to see if this provider is lagging
 const checkProvider = async () => {
     // calculate time diff between last reported timestamp and now
-    const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
+    let stats;
+    try {
+        stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
+    }
+    catch(error) {
+        console.log('File not found');
+        return false;
+    }
+
     const timeDiff = Math.abs(new Date().getTime() / 1000 - stats.lastTime);    
     const timeLimit = 300; // 5 minutes
     if (timeDiff > timeLimit) {
@@ -262,7 +270,7 @@ const loop = async () => {
     }
 
     if (state === 0) {
-        console.log(`Failed to fetch new blocks. I will try again in ${ timeInterval.toFixed(1) }ms`);
+        console.log(`Failed to fetch new blocks. I will try again in ${ (timeInterval || 0).toFixed(1) }ms`);
         await checkProvider();
     }
 

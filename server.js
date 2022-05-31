@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
 const Web3 = require('web3');
-const db = require('./database');
+// const db = require('./database');
 
 let port = 80;
 
