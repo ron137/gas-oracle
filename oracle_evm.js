@@ -228,7 +228,6 @@ const rpc = {
             if (block && block.transactions.length && block.gasUsed == 0) {
                 const txs = await Promise.all(block.transactions.map(e => this.getTx(e.hash, true)));
                 block.gasUsed = txs.map(e => e.gasUsed).reduce((p,c) => p+c, 0);
-                console.log(block.gasUsed);
             }
 
             // check if its a new block
