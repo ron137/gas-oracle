@@ -297,7 +297,7 @@ const rpc = {
                 avgGas: [],
             };
 
-            if (!this.legacyGas){
+            if (block.baseFee){
                 this.blocks[block.number].baseFee = block.baseFee;
             }
 
@@ -344,7 +344,7 @@ const rpc = {
         }
         
         // reshape blocks object to be arrays of each field
-        const result = Object.fromEntries(Object.keys(b[0]).map(e => [e, []]));
+        const result = Object.fromEntries(Object.keys(b.slice(-1)[0]).map(e => [e, []]));
         b.forEach(block => Object.keys(result).forEach(key => result[key].push(block[key])));
 
         // last block
