@@ -279,7 +279,11 @@ const rpc = {
 
             if (transactions.length){
                 // set average gas per tx in the block
-                const avgGas = parseInt(block.gasUsed) / transactions.length;
+                let avgGas = parseInt(block.gasUsed) / transactions.length;
+                // the rpc does not show block.gasUsed (aurora)
+                if (avgGas == 0) {
+                    avgGas = block.transactions.map(e => e.gas).reduce((p,c) => p+c, 0) / transactions.length;
+                }
 
                 this.blocks[block.number].minGwei = transactions;
                 this.blocks[block.number].avgGas = avgGas;
@@ -316,6 +320,10 @@ const rpc = {
         // sort blocks by timestamp, then remove blocks with no tx
         const b = Object.values(this.blocks).sort((a,b) => a.timestamp - b.timestamp).filter(e => e.ntx);
 
+        if (!b || !b[0]) {
+            return false;
+        }
+        
         // reshape blocks object to be arrays of each field
         const result = Object.fromEntries(Object.keys(b[0]).map(e => [e, []]));
         b.forEach(block => Object.keys(result).forEach(key => result[key].push(block[key])));
@@ -515,4 +523,6 @@ const rpc = {
     // }
 };
 
-rpc.connect().then(() => rpc.loop(), console.log);
+rpc.connect().then(async () => {
+    rpc.loop();
+}, console.log);

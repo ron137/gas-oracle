@@ -45,5 +45,9 @@
         "https://forno.celo.org",
         "https://rpc.ankr.com/celo"
     ],
-    "fuse": "https://rpc.fuse.io"
+    "fuse": [
+        "https://rpc.fuse.io",
+        "https://fuse-rpc.gateway.pokt.network"
+    ],
+    "aurora": "https://mainnet.aurora.dev"
 }

@@ -71,6 +71,11 @@
             "args"        : "-n juno -t 7000"
         },
         {
+            "name"        : "oracle_aurora",
+            "script"      : "./oracle_evm.js",
+            "args"        : "-n aurora -t 500"
+        },
+        {
             "name"        : "oracle_server",
             "script"      : "./server.js",
             "args"        : "-p 8080"
