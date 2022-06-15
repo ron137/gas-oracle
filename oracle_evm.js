@@ -176,6 +176,23 @@ const rpc = {
         }
     },
 
+    getTx: async function(hash, receipt=false) {
+        if (!this.connected){
+            throw new Error('Not connected');
+        }
+
+        try {
+            if (receipt) {
+                return await this.web3.eth.getTransactionReceipt(hash);
+            }
+            return await this.web3.eth.getTransaction(hash);
+        }
+        catch(error){
+            // console.log(error);
+            return new Error(error);
+        }
+    },
+
     getBaseFee: async function(num='latest') {
         try {
             const history = await this.web3.eth.getFeeHistory(1, num, [0]);
@@ -205,6 +222,13 @@ const rpc = {
             const block = promises[0].status == 'fulfilled' ? promises[0].value : null;
             if (!this.legacyGas && block) {
                 block.baseFee = promises[1].status == 'fulfilled' ? promises[1].value : null;
+            }
+
+            // the rpc does not show block.gasUsed (aurora)
+            if (block && block.transactions.length && block.gasUsed == 0) {
+                const txs = await Promise.all(block.transactions.map(e => this.getTx(e.hash, true)));
+                block.gasUsed = txs.map(e => e.gasUsed).reduce((p,c) => p+c, 0);
+                console.log(block.gasUsed);
             }
 
             // check if its a new block
@@ -279,12 +303,7 @@ const rpc = {
 
             if (transactions.length){
                 // set average gas per tx in the block
-                let avgGas = parseInt(block.gasUsed) / transactions.length;
-                // the rpc does not show block.gasUsed (aurora)
-                if (avgGas == 0) {
-                    avgGas = block.transactions.map(e => e.gas).reduce((p,c) => p+c, 0) / transactions.length;
-                }
-
+                const avgGas = parseInt(block.gasUsed) / transactions.length;
                 this.blocks[block.number].minGwei = transactions;
                 this.blocks[block.number].avgGas = avgGas;
             }
@@ -525,4 +544,7 @@ const rpc = {
 
 rpc.connect().then(async () => {
     rpc.loop();
+    // const block = await rpc.getBlock(67790070, true);
+    // const block = await rpc.getBlock('0x5cc6b8b7c957db58b0958dd7fa567cff58a0e94e25adf8a6344eb5efef36e99c', true);
+    // console.log(block);
 }, console.log);
