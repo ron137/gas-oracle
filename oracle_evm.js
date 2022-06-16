@@ -4,6 +4,7 @@ const fs = require('fs');
 const args = {
     network: 'ethereum',
     sampleSize: 1000,
+    timeInterval: 1000,
 };
 
 // receive args
@@ -26,7 +27,7 @@ const rpc = {
     blocks: {},
     sampleSize: args.sampleSize, // number of samples analized
     // speedSize: [35, 60, 90, 100], // percent of blocks accepted for each speed
-    timeInterval: args.timeInterval || 1000,
+    timeInterval: args.timeInterval,
     minInterval: 100,
     maxInterval: 15000,
 
@@ -87,9 +88,7 @@ const rpc = {
 
         // there is only one rpc
         if (!Array.isArray(url[args.network])) {
-            this.web3 = new Web3(url[args.network]);
-            this.rpc = url[args.network];
-            return true;
+            url[args.network] = [ url[args.network] ];
         }
 
         // there is index arg
@@ -139,6 +138,8 @@ const rpc = {
             const bestRPC = await getBestRPC();
             this.web3 = new Web3(bestRPC.rpc);
             this.rpc = bestRPC.rpc;
+            this.last = bestRPC.lastBlock;
+            this.timeInterval = args.timeInterval;
         }
 
         // this is the first time run
