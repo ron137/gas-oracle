@@ -149,7 +149,11 @@ const rpc = {
         }
 
         // calculate time diff between last reported timestamp and now
-        const stats = JSON.parse(fs.readFileSync(`./blockStats_${args.network}.json`));
+        let stats = { lastTime: 0 };
+        const filepath = `./blockStats_${args.network}.json`;
+        if (fs.existsSync(filepath)){
+            stats = JSON.parse(fs.readFileSync(filepath));
+        }
         const timeDiff = Math.abs(new Date().getTime() / 1000 - stats.lastTime);    
         const timeLimit = 300; // 5 minutes
         if (timeDiff > timeLimit) {
