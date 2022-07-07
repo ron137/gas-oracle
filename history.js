@@ -96,21 +96,37 @@ const rpc = {
         }
     },
 
+    getBlockWalkingBack: async function(num) {
+        const block = await this.getBlock(num);
+        if (block && block.transactions){
+            return block;
+        }
+        return this.retry(num - 1);
+    },
+
     loop: async function(){
+        const calls = 100;
         try {
             // get a block
-            const block = await this.getBlock(this.last);
-            if (block && block.transactions){
+            const callList = [];
+            let prevCall = this.last;
+            for (let i=0 ; i<calls ; i++) {
+                callList.push(this.getBlockWalkingBack(prevCall));
+                prevCall -= parseInt(this.timeSkip / this.sampleSize);
+            }
+            this.last = prevCall;
+
+            (await Promise.allSettled(callList)).forEach(block => {
+                if (block.status != 'fulfilled') {
+                    return ;
+                }
+
+                // no need to check if block has transactions because getBlockWalkingBack already does that
                 // save the block
-                this.recordBlock(block);
+                this.recordBlock(block.value);
                 // call to update monited wallets. required only if want to monitor txs to target addresses
                 // db.updateWallets(block, args.network);
-                
-                this.last = block.number - parseInt(this.timeSkip / this.sampleSize);
-            }
-            else {
-                this.last = this.last - 1;
-            }
+            });
 
             setTimeout(() => this.loop(), 10);
         }
