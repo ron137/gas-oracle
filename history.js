@@ -33,6 +33,9 @@ process.argv.forEach((val, index, array) => {
     if ((val == '-t' || val == '--time-skip') && array[index+1]){
         args.timeSkip = array[index+1];
     }
+    if ((val == '-l' || val == '--limit-block') && array[index+1]){
+        args.limitBlock = array[index+1];
+    }
 });
 
 
@@ -44,6 +47,7 @@ const rpc = {
     startTime: new Date().getTime(),
     scannedBlocks: 0,
     timeSkip: args.timeSkip || 0,
+    limitBlock: args.limitBlock || 0,
 
     connect: async function(){
         const url = JSON.parse(fs.readFileSync(`rpcs.json`));
@@ -128,6 +132,9 @@ const rpc = {
                 // db.updateWallets(block, args.network);
             });
 
+            if (this.last < this.limitBlock) {
+                return;
+            }
             setTimeout(() => this.loop(), 10);
         }
         catch (error){
@@ -160,7 +167,7 @@ const rpc = {
 
             const avgTime = ((new Date().getTime() - this.startTime) / this.scannedBlocks).toFixed(1);
             const now = new Date(block.timestamp * 1000).toISOString();
-            console.log(`${new Date().toISOString()}: Block: ${this.last}. Avg time: ${avgTime} ms.Timestamp: ${now}.`);
+            console.log(`${new Date().toISOString()}: Block: ${ block.number }. Avg time: ${avgTime} ms.Timestamp: ${now}.`);
 
             this.calcBlockStats();
         }
@@ -169,15 +176,16 @@ const rpc = {
     calcBlockStats: function(){
         // sort blocks by timestamp, then remove blocks with no tx
         const b = Object.values(this.blocks).sort((a,b) => a.timestamp - b.timestamp).filter(e => e.ntx);
+        const lastBlock = Math.max(...Object.keys(this.blocks));
 
         // reshape blocks object to be arrays of each field
         const result = Object.fromEntries(Object.keys(b[0]).map(e => [e, []]));
         b.forEach(block => Object.keys(result).forEach(key => result[key].push(block[key])));
 
         // last block
-        result.lastBlock = this.last;
+        result.lastBlock = lastBlock;
 
-        fs.writeFileSync(`${__dirname}/history/${args.network}/${this.last}.json`, JSON.stringify(result));
+        fs.writeFileSync(`${__dirname}/history/${args.network}/${ lastBlock }.json`, JSON.stringify(result));
         this.blocks = {};
 
         return result;
