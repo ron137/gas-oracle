@@ -55,8 +55,17 @@ const rpc = {
         console.log('Starting gas oracle...');
 
         try {
-            this.web3 = new Web3(new Web3.providers.HttpProvider(url[args.network || 'ethereum']));
-            this.web3.setProvider(url[args.network || 'ethereum']);
+            let rpc = url[args.network];
+
+            if (!rpc) {
+                rpc = url.ethereum;
+            }
+
+            if (Array.isArray(rpc)) {
+                rpc = rpc[0];
+            }
+
+            this.web3 = new Web3(rpc);
 
             this.last = args.startingBlock ? args.startingBlock : await this.web3.eth.getBlockNumber();
 
