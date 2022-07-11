@@ -386,38 +386,38 @@ const rpc = {
     },
 
     // if you want the oracle to return directly the speeds
-    // calcSpeeds: function(){
-    //     // sort blocks by timestamp, then remove blocks with no tx
-    //     const b = Object.values(this.blocks).sort((a,b) => a.timestamp - b.timestamp).filter(e => e.ntx);
+    calcSpeeds: function(){
+        // sort blocks by timestamp, then remove blocks with no tx
+        const b = Object.values(this.blocks).sort((a,b) => a.timestamp - b.timestamp).filter(e => e.ntx);
         
-    //     const avgTx = b.map(e => e.ntx).reduce((p,c) => p+c, 0) / b.length;
-    //     // avg time between the sample
-    //     const avgTime = (b.slice(-1)[0].timestamp - b[0].timestamp) / (b.length - 1);
+        const avgTx = b.map(e => e.ntx).reduce((p,c) => p+c, 0) / b.length;
+        // avg time between the sample
+        const avgTime = (b.slice(-1)[0].timestamp - b[0].timestamp) / (b.length - 1);
         
-    //     // sort gwei array ascending so I can pick directly by index
-    //     const sortedGwei = b.map(e => e.minGwei).sort((a,b) => parseFloat(a) - parseFloat(b));
-    //     const speeds = this.speedSize.map(speed => {
-    //         // get gwei corresponding to the slice of the array
-    //         const poolIndex = parseInt(speed / 100 * b.length) - 1;
-    //         const speedGwei = sortedGwei[poolIndex];
+        // sort gwei array ascending so I can pick directly by index
+        const sortedGwei = b.map(e => e.minGwei).sort((a,b) => parseFloat(a) - parseFloat(b));
+        const speeds = this.speedSize.map(speed => {
+            // get gwei corresponding to the slice of the array
+            const poolIndex = parseInt(speed / 100 * b.length) - 1;
+            const speedGwei = sortedGwei[poolIndex];
 
-    //         // get average time for each speed
-    //         const accepted = b.filter(e => e.minGwei <= speedGwei);
-    //         const avgTime = (accepted.slice(-1)[0].timestamp - accepted[0].timestamp) / (accepted.length - 1);
+            // get average time for each speed
+            const accepted = b.filter(e => e.minGwei <= speedGwei);
+            const avgTime = (accepted.slice(-1)[0].timestamp - accepted[0].timestamp) / (accepted.length - 1);
 
-    //         return speedGwei;
-    //     });
+            return speedGwei;
+        });
 
-    //     const result = {
-    //         lastBlock: this.last,
-    //         avgTime: avgTime,
-    //         avgTx: avgTx,
-    //         speeds: speeds,
-    //     }
+        const result = {
+            lastBlock: this.last,
+            avgTime: avgTime,
+            avgTx: avgTx,
+            speeds: speeds,
+        }
 
-    //     fs.writeFileSync(`${__dirname}/predicted_gwei.json`, JSON.stringify(result));
-    //     return result;
-    // },
+        fs.writeFileSync(`${__dirname}/predicted_gwei.json`, JSON.stringify(result));
+        return result;
+    },
 
     dynamicInterval: function(state) {
         const speedFactor = 1.1;
@@ -444,106 +444,106 @@ const rpc = {
 
     // testing methods
 
-    // testTxpool: async function(){
-    //     try {
-    //         const test = await this.web3.eth.txpool.status();
-    //         if (test.pending){
-    //             return true;
-    //         }
-    //     }
-    //     catch(error) {
-    //         return false;
-    //     }
-    //     return false;
-    // },
+    testTxpool: async function(){
+        try {
+            const test = await this.web3.eth.txpool.status();
+            if (test.pending){
+                return true;
+            }
+        }
+        catch(error) {
+            return false;
+        }
+        return false;
+    },
 
-    // getTxPool: async function(){
-    //     // get transaction hash and gwei from txpool
-    //     try {
-    //         const content = await this.web3.eth.txpool.content();
-    //         const transactions = [];
-    //         Object.values(content).forEach(type => {
-    //             Object.values(type).forEach(from => {
-    //                 transactions.push(...Object.values(from).map(e => { return {
-    //                     hash: e.hash,
-    //                     gasPrice: parseFloat(this.web3.utils.fromWei(e.gasPrice, 'gwei')),
-    //                 }}));
-    //             });
-    //         });
-    //         // console.log(content);
-    //         return transactions;
-    //     }
-    //     catch(error){
-    //         console.log('error');
-    //         return new Error(error);
-    //     }
-    // },
+    getTxPool: async function(){
+        // get transaction hash and gwei from txpool
+        try {
+            const content = await this.web3.eth.txpool.content();
+            const transactions = [];
+            Object.values(content).forEach(type => {
+                Object.values(type).forEach(from => {
+                    transactions.push(...Object.values(from).map(e => { return {
+                        hash: e.hash,
+                        gasPrice: parseFloat(this.web3.utils.fromWei(e.gasPrice, 'gwei')),
+                    }}));
+                });
+            });
+            // console.log(content);
+            return transactions;
+        }
+        catch(error){
+            console.log('error');
+            return new Error(error);
+        }
+    },
 
-    // calc: async function(){
-    //     const nBlocks = 200;
-    //     const poolPromise = this.getTxPool();
-    //     let predicted = JSON.parse(fs.readFileSync(`${__dirname}/predicted_gwei.json`));
+    calc: async function(){
+        const nBlocks = 200;
+        const poolPromise = this.getTxPool();
+        let predicted = JSON.parse(fs.readFileSync(`${__dirname}/predicted_gwei.json`));
 
-    //     // wait until you have X blocks ahead of the txpool we are looking at
-    //     const waitBlocks = async target => {
-    //         predicted = JSON.parse(fs.readFileSync(`${__dirname}/predicted_gwei.json`));
-    //         const lastBlock = parseInt(predicted.lastBlock);
+        // wait until you have X blocks ahead of the txpool we are looking at
+        const waitBlocks = async target => {
+            predicted = JSON.parse(fs.readFileSync(`${__dirname}/predicted_gwei.json`));
+            const lastBlock = parseInt(predicted.lastBlock);
 
-    //         if (lastBlock >= target){
-    //             return true;
-    //         }
-    //         process.stdout.write(`\rWaiting on block ${target}. Now: ${lastBlock}`);
-    //         return await new Promise(resolve => setTimeout(async () => resolve(await waitBlocks(target)), 1000));
-    //     }
+            if (lastBlock >= target){
+                return true;
+            }
+            process.stdout.write(`\rWaiting on block ${target}. Now: ${lastBlock}`);
+            return await new Promise(resolve => setTimeout(async () => resolve(await waitBlocks(target)), 1000));
+        }
 
-    //     console.log('Waiting for blocks...');
-    //     await waitBlocks(parseInt(predicted.lastBlock) + nBlocks);        
-    //     console.log('\nWaiting for Txpool...');
-    //     const pool = await poolPromise;
+        console.log('Waiting for blocks...');
+        await waitBlocks(parseInt(predicted.lastBlock) + nBlocks);        
+        console.log('\nWaiting for Txpool...');
+        const pool = await poolPromise;
         
-    //     if (!Array.isArray(pool)){
-    //         console.log('Error retrieving txpool');
-    //         return;
-    //     }
+        if (!Array.isArray(pool)){
+            console.log('Error retrieving txpool');
+            return;
+        }
 
-    //     const speeds = [...predicted.speeds, 10000000];
+        const speeds = [...predicted.speeds, 10000000];
 
-    //     // get last X blocks
-    //     const blocks = JSON.parse(fs.readFileSync(`${__dirname}/blocks.json`));
-    //     const minedTransactions = speeds.map(e => []);
-    //     Object.values(blocks).slice(-nBlocks).forEach((block,ib) => {
-    //         // save only transactions mined fitting each gas price
-    //         block.transactions.forEach(transaction => {
-    //             speeds.forEach((speed,is) => {
-    //                 if (!minedTransactions[is][ib]){
-    //                     minedTransactions[is][ib] = [];
-    //                 }
-    //                 if (transaction.gasPrice <= speed){
-    //                     minedTransactions[is][ib].push(transaction.hash);
-    //                 }
-    //             });
-    //         });
-    //     });
+        // get last X blocks
+        const blocks = JSON.parse(fs.readFileSync(`${__dirname}/blocks.json`));
+        const minedTransactions = speeds.map(e => []);
+        Object.values(blocks).slice(-nBlocks).forEach((block,ib) => {
+            // save only transactions mined fitting each gas price
+            block.transactions.forEach(transaction => {
+                speeds.forEach((speed,is) => {
+                    if (!minedTransactions[is][ib]){
+                        minedTransactions[is][ib] = [];
+                    }
+                    if (transaction.gasPrice <= speed){
+                        minedTransactions[is][ib].push(transaction.hash);
+                    }
+                });
+            });
+        });
 
-    //     // console.log(...minedTransactions);
+        // console.log(...minedTransactions);
         
-    //     const minedPool = speeds.map(e => []);
-    //     pool.forEach(transaction => {
-    //         minedTransactions.forEach((speed,is) => {
-    //             speed.forEach((block,ib) => {
-    //                 if (!minedPool[is][ib]){
-    //                     minedPool[is][ib] = [];
-    //                 }
-    //                 if (block.includes(transaction.hash)){
-    //                     minedPool[is][ib].push(transaction.hash);
-    //                 }
-    //             });
-    //         })
-    //     });
+        const minedPool = speeds.map(e => []);
+        pool.forEach(transaction => {
+            minedTransactions.forEach((speed,is) => {
+                speed.forEach((block,ib) => {
+                    if (!minedPool[is][ib]){
+                        minedPool[is][ib] = [];
+                    }
+                    if (block.includes(transaction.hash)){
+                        minedPool[is][ib].push(transaction.hash);
+                    }
+                });
+            })
+        });
 
-    //     fs.writeFileSync(`${__dirname}/predict_time.json`, JSON.stringify(minedPool.map(e => e.map(e => e.length))));
-    //     console.log('DONE')
-    // }
+        fs.writeFileSync(`${__dirname}/predict_time.json`, JSON.stringify(minedPool.map(e => e.map(e => e.length))));
+        console.log('DONE')
+    }
 };
 
 rpc.connect().then(async () => {

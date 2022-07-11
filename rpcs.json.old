@@ -22,7 +22,11 @@
         "https://rpc.ankr.com/avalanche"
     ],
     "fantom": [
-        "ws://127.0.0.1:8546"
+        "ws://rpc.ftm.tools",
+        "https://rpcapi.fantom.network",
+        "https://rpc.fantom.network",
+        "https://rpc.ankr.com/fantom",
+        "https://rpc2.fantom.network"
     ],
     "moonriver": [
         "https://rpc.api.moonriver.moonbeam.network",
